@@ -30,7 +30,7 @@ interface MainPanelProps {
 const MainPanel: React.FC<MainPanelProps> = (props) => {
     return <AppBar position='fixed' style={{ bottom: 0, top: 'auto', padding: '1em' }}>
         <Grid container>
-            <Grid container item xs={6} spacing={2}>
+            <Grid container item xs spacing={2}>
                 {(() => {
                     switch (props.action) {
                         case Action.DRAW:
@@ -102,7 +102,7 @@ const MainPanel: React.FC<MainPanelProps> = (props) => {
                     </Tooltip>
                 </Grid>
             </Grid>
-            <Grid container item xs={6} justify='flex-end'>
+            <Grid container item xs justify='flex-end'>
                 <Grid item>
                     <Tooltip title="Toggle Camera">
                         <IconButton onClick={() => (props.onWebcamChange) ? props.onWebcamChange() : {}}>

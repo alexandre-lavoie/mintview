@@ -1,0 +1,31 @@
+appId: com.alexandre.lavoie
+
+productName: MintView
+
+directories:
+  output: dist
+  buildResources: resources
+
+files:
+  - from: .
+    filter:
+      - package.json
+      - app
+
+win:
+  icon: "build/icon.ico"
+  target:
+    - zip
+    - nsis
+
+nsis:
+  oneClick: true
+  perMachine: true
+
+linux:
+  icon: "build/icon.icns"
+  category: Utility
+  target:
+    - pacman
+
+publish: null
