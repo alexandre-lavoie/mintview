@@ -14,7 +14,9 @@ import VideocamOff from '@material-ui/icons/VideocamOff';
 import { Action } from '../../utils';
 
 interface MainPanelProps {
+    /** Current action to perform on canvas. */
     action?: Action,
+    /** Is webcam active? */
     webcam?: boolean,
     onFlip?: () => void,
     onChangeAction?: () => void,

@@ -1,17 +1,18 @@
 import * as React from 'react';
 import { fabric } from 'fabric';
+import { convertDataURIToBinaryFetch } from '../../utils';
 
 interface UtilHandlerProps {
+    /** Attached canvas. */
     canvas: fabric.Canvas | null
 }
 
-function convertDataURIToBinaryFetch(dataURI: string) {
-    return fetch(dataURI)
-        .then((res) => res.blob());
-}
-
 const UtilHandler: React.FC<UtilHandlerProps> = (props) => {
-    const copy = async (e: ClipboardEvent) => {
+    /** 
+     * Copies first active object on canvas to clipboard. 
+     * @param e Clipboard event.
+     */
+    async function copy(e: ClipboardEvent) {
         if (e.clipboardData && props.canvas) {
             let items = await Promise.all((
                 props.canvas
@@ -36,7 +37,11 @@ const UtilHandler: React.FC<UtilHandlerProps> = (props) => {
         e.preventDefault();
     }
 
-    const paste = (e: ClipboardEvent) => {
+    /** 
+     * Pastes images on clipboard onto canvas. 
+     * @param e Clipboard event.
+     */
+    function paste(e: ClipboardEvent) {
         if (props.canvas) {
             //@ts-ignore
             Object.values(e.clipboardData.items).forEach(file => {
@@ -57,7 +62,11 @@ const UtilHandler: React.FC<UtilHandlerProps> = (props) => {
         }
     };
 
-    const drop = (e: DragEvent) => {
+    /** 
+     * Handles drag and drop images onto canvas.
+     * @param e Drag event.
+     */
+    function drop (e: DragEvent) {
         if (props.canvas && e.dataTransfer) {
             let pointer = props.canvas.getPointer(e);
 
@@ -76,6 +85,10 @@ const UtilHandler: React.FC<UtilHandlerProps> = (props) => {
         e.preventDefault();
     }
 
+    /**
+     * Attaches util event trigger to mouse event function.
+     * @dependency props.canvas
+     */
     React.useEffect(() => {
         if (props.canvas) {
             window.removeEventListener('drop', drop);

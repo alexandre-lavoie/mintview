@@ -3,15 +3,25 @@ import { fabric } from 'fabric';
 import { Action } from '../../utils';
 
 interface MouseHandlerProps {
+    /** Attached canvas. */
     canvas: fabric.Canvas | null,
+    /** Current action to perform on canvas. */
     action?: Action,
+    /** Line that follows cursor. */
+    followLine?: fabric.Line,
+    /** Handles mouse down event. */
     onMouseDown?: (opt: fabric.IEvent) => void
 }
 
 const MouseHandler: React.FC<MouseHandlerProps> = (props) => {
+    /** Current button being held on mouse. */
     const [button, setButton] = React.useState<number | undefined>(undefined);
 
-    const handleMouseWheel = (opt: fabric.IEvent) => {
+    /**
+     * Handles mouse wheel event.
+     * @param opt Mouse event.
+     */
+    function handleMouseWheel(opt: fabric.IEvent) {
         if (props.canvas) {
             //@ts-ignore
             var delta = opt.e.deltaY;
@@ -24,10 +34,19 @@ const MouseHandler: React.FC<MouseHandlerProps> = (props) => {
             opt.e.preventDefault();
             opt.e.stopPropagation();
         }
-    };
+    }
 
-    const handleMouseMove = (opt: fabric.IEvent) => {
+    /**
+     * Handles mouse move event.
+     * @param opt Mouse event.
+     */
+    function handleMouseMove(opt: fabric.IEvent) {
         if (props.canvas) {
+            if (props.followLine && opt.absolutePointer) {
+                props.followLine.set({ x2: opt.absolutePointer.x, y2: opt.absolutePointer.y });
+                props.followLine.moveTo(1);
+            }
+
             switch (button) {
                 case 2:
                     //@ts-ignore
@@ -39,40 +58,51 @@ const MouseHandler: React.FC<MouseHandlerProps> = (props) => {
         }
     }
 
-    const handleMouseDown = (opt: fabric.IEvent) => {
+    /**
+     * Handles mouse down event.
+     * @param opt Mouse event.
+     */
+    function handleMouseDown(opt: fabric.IEvent) {
         if (props.canvas) {
             setButton(opt.button);
 
-            if(props.onMouseDown) {
+            if (props.onMouseDown) {
                 props.onMouseDown(opt);
             }
         }
     }
 
-    const handleMouseUp = (opt: fabric.IEvent) => {
+    /**
+     * Handles mouse up event.
+     * @param opt Mouse event.
+     */
+    function handleMouseUp(opt: fabric.IEvent) {
         setButton(undefined);
     }
 
+    /**
+     * Attaches mouse event trigger to mouse event function.
+     * @dependency props.canvas, button, props.action
+     */
     React.useEffect(() => {
-        if(props.canvas) {
+        if (props.canvas) {
             props.canvas.off('mouse:wheel').on('mouse:wheel', handleMouseWheel);
             props.canvas.off('mouse:up').on('mouse:up', handleMouseUp);
-        }
-    }, [props.canvas]);
-
-    React.useEffect(() => {
-        if(props.canvas) {
             props.canvas.off('mouse:move').on('mouse:move', handleMouseMove);
-        }
-    }, [props.canvas, button]);
-
-    React.useEffect(() => {
-        if(props.canvas) {
             props.canvas.off('mouse:down').on('mouse:down', handleMouseDown);
         }
-    }, [props.canvas, button, props.action])
 
-    return <></>
+        return () => {
+            if (props.canvas) {
+                props.canvas.off('mouse:wheel');
+                props.canvas.off('mouse:up');
+                props.canvas.off('mouse:move');
+                props.canvas.off('mouse:down');
+            }
+        };
+    }, [props.canvas, button, props.action]);
+
+    return <></>;
 };
 
 export default MouseHandler;
