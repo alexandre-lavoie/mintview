@@ -4,13 +4,14 @@
   "description": "",
   "main": "app/background.js",
   "scripts": {
-    "dev:web": "ts-node-dev --project tsconfig.server.json --ignore-watch [\".next\",\"node_modules\"] ./api/index.ts",
-    "dev:electron": "nextron",
+    "start": "ts-node-dev --project tsconfig.server.json --ignore-watch [\".next\",\"node_modules\"] ./express_api/index.ts",
+    "start:electron": "nextron",
+    "build": "npm run build:web && npm run build:electron",
     "build:web": "next build",
     "build:electron": "nextron build --all",
     "build:electron:win": "nextron build --win",
     "build:electron:linux": "nextron build --linux",
-    "start": "ts-node --project tsconfig.server.json ./api/index.ts"
+    "build:electron:mac": "nextron build --mac"
   },
   "repository": {
     "type": "git",
@@ -33,7 +34,7 @@
     "cors": "^2.8.5",
     "electron-serve": "^1.0.0",
     "express": "^4.17.1",
-    "fabric": "^4.0.0-rc.1",
+    "fabric": "^4.0.0-rc.1-browser",
     "framer-motion": "^1.10.2",
     "i18next": "^19.6.2",
     "isomorphic-unfetch": "^3.0.0",
@@ -50,18 +51,18 @@
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.6",
-    "@types/fabric": "^3.6.7",
+    "@types/fabric": "^3.6.8",
     "@types/node": "^13.13.4",
     "@types/react": "^16.9.34",
     "@types/react-color": "^3.0.4",
     "@types/react-dom": "^16.9.5",
     "@types/react-router-dom": "^5.1.3",
-    "electron": "^9.1.0",
+    "electron": "^9.1.1",
     "electron-builder": "^22.7.0",
     "ignore-loader": "^0.1.2",
     "nextron": "^5.15.0",
     "ts-node": "^8.10.2",
-    "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.8.3"
+    "ts-node-dev": "^1.0.0-pre.52",
+    "typescript": "^3.9.7"
   }
 }

@@ -8,7 +8,7 @@ const handle = nextApp.getRequestHandler();
 
 nextApp.prepare()
 .then(async () => {
-    const app = express() as any;
+    const app = express();
     const server = http.createServer(app);
 
     app.use(express.static('public'));

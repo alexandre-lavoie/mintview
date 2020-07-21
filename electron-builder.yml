@@ -1,6 +1,5 @@
-appId: com.alexandre.lavoie
-
 productName: MintView
+appId: com.alexandre.lavoie
 
 directories:
   output: dist
@@ -18,14 +17,22 @@ win:
     - zip
     - nsis
 
+mac:
+  icon: "build/icon.icns"
+  target:
+    - dmg
+
 nsis:
   oneClick: true
   perMachine: true
 
 linux:
   icon: "build/icon.icns"
-  category: Utility
+  category: Office
   target:
+    - AppImage
+    - deb
+    - snap
     - pacman
 
 publish: null

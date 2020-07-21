@@ -15,7 +15,7 @@
     },
     "include": [
         "./types/global.d.ts",
-        "api/**/*.ts"
+        "express_api/**/*.ts"
     ],
     "exclude": [
         "node_modules",
