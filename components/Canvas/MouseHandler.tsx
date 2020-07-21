@@ -9,6 +9,8 @@ interface MouseHandlerProps {
     action?: Action,
     /** Line that follows cursor. */
     followLine?: fabric.Line,
+    /** Offset for line stack. */
+    lineOffset?: number,
     /** Handles mouse down event. */
     onMouseDown?: (opt: fabric.IEvent) => void
 }
@@ -100,7 +102,7 @@ const MouseHandler: React.FC<MouseHandlerProps> = (props) => {
                 props.canvas.off('mouse:down');
             }
         };
-    }, [props.canvas, button, props.action]);
+    }, [props.canvas, button, props.action, props.lineOffset]);
 
     return <></>;
 };

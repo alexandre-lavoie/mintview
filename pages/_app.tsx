@@ -3,6 +3,7 @@ import App from 'next/app'
 import Head from 'next/head';
 import { createMuiTheme, CssBaseline } from '@material-ui/core';
 import { ThemeProvider } from '@material-ui/styles';
+import '../localization';
 
 const theme = createMuiTheme({
     palette: {
@@ -13,7 +14,7 @@ const theme = createMuiTheme({
     }
 });
 
-export default class MyApp extends App {
+export class MyApp extends App {
     render() {
         const { Component, pageProps } = this.props;
         
@@ -29,3 +30,5 @@ export default class MyApp extends App {
         )
     }
 }
+
+export default MyApp;

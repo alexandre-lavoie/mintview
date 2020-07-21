@@ -10,6 +10,8 @@ import { attachSliderControls } from './SliderControl';
 interface CanvasProps {
     /** Current action to perform on canvas. */
     action?: Action,
+    /** Is grid active? */
+    grid?: boolean,
     style?: React.CSSProperties | undefined,
     /** Is webcam active? */
     webcam?: boolean,
@@ -31,13 +33,17 @@ export interface CanvasRef {
     /** Redos sketch line. */
     redo: () => void,
     /** Captures the scene as a screenshot. */
+    screenshot: () => void,
+    /** Captures webcam as image object. */
     webcamCapture: () => void,
     /** Copies active objects else copies webcam image. */
     copy: () => void,
     /** Flips all active objects else all image objects. */
     flip: () => void,
     /** Handles locking of active objects. */
-    lock: () => void
+    lock: () => void,
+    /** Handles unlocking locked objects. */
+    unlock: () => void
 }
 
 /** Constant set for stopping drawing. */
@@ -63,6 +69,8 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
     const [handleFrame, setHandleFrame] = React.useState<NodeJS.Timeout | null>(null);
     /** Cursor line follower reference. */
     const [followLine, setFollowLine] = React.useState<fabric.Line | undefined>(undefined);
+    /** Grid reference. */
+    const [grid, setGrid] = React.useState<fabric.Image | undefined>(undefined);
     /** Theme reference. */
     const theme = useTheme();
 
@@ -71,8 +79,19 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
      */
     function lock() {
         if (canvas) {
-            canvas.getActiveObjects().forEach(obj => { obj.selectable = false; obj.evented = false; obj.moveTo(0) });
+            let activatedObjects = canvas.getActiveObjects();
+
+            activatedObjects.forEach(obj => { obj.set({ selectable: false, evented: false }); obj.moveTo(0) });
             canvas.discardActiveObject();
+        }
+    }
+
+    /**
+     * Handles unlocking of objects.
+     */
+    function unlock() {
+        if (canvas) {
+            canvas.getObjects().filter(obj => obj != webcam && !obj.isType('line')).forEach(obj => obj.set({ selectable: true, evented: true }));
         }
     }
 
@@ -96,6 +115,10 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
         if (canvas && lineOffset > 0) {
             let line = lines[lineOffset - 1];
 
+            if (followLine) {
+                followLine.set({ x1: line.x1, y1: line.y1 });
+            }
+
             if (lineOffset > 1) {
                 setPreviousCursor([line.x1, line.y1] as any);
             } else {
@@ -105,6 +128,8 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
             canvas.remove(line);
 
             setLineOffset(lineOffset - 1);
+        } else if (followLine) {
+            followLine.set('visible', false);
         }
     }
 
@@ -114,6 +139,10 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
     function redo() {
         if (canvas && lineOffset < lines.length && lineOffset >= 0) {
             let line = lines[lineOffset];
+
+            if (followLine) {
+                followLine.set({ x1: line.x2, y1: line.y2 });
+            }
 
             setPreviousCursor([line.x2, line.y2] as any);
 
@@ -143,41 +172,42 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
      */
     function copy() {
         if (webcam && canvas) {
-            let activeObj = canvas.getActiveObjects();
+            canvas.getActiveObjects().forEach(o => o.clone((clone: fabric.Object) => {
+                canvas.add(clone);
 
-            if (activeObj.length > 0) {
-                activeObj.forEach(o => o.clone((clone: fabric.Object) => {
-                    canvas.add(clone);
+                if(clone.left && clone.top) {
+                    clone.set({ left: clone.left + 50, top: clone.top + 50 });
+                }
 
-                    canvas.setActiveObject(clone);
-                }));
-            } else {
-                let wb: HTMLVideoElement = document.getElementById('webcam') as any;
+                canvas.setActiveObject(clone);
+            }));
+        }
+    }
 
-                fabric.Image.fromURL(webcam.toDataURL({}), (img) => {
-                    img.moveTo(0);
+    /**
+     * Captures the camera as an image object.
+     */
+    function webcamCapture() {
+        if (webcam && canvas) {
+            let wb: HTMLVideoElement = document.getElementById('webcam') as any;
 
-                    canvas.add(img);
-                }, { left: window.innerWidth / 2 + wb.videoWidth + 10, top: window.innerHeight / 2, originX: 'center', originY: 'center' });
-            }
+            fabric.Image.fromURL(webcam.toDataURL({}), (img) => {
+                img.moveTo(0);
+
+                canvas.add(img);
+            }, { left: wb.videoWidth + 50 });
         }
     }
 
     /**
      * Captures the scene as a screenshot.
      */
-    function webcamCapture() {
+    function screenshot() {
         if (canvas) {
-            // TODO: Fix the screen coordinate translation.
-
-            let viewport = canvas.calcViewportBoundaries();
-
             let image = canvas.toDataURL({
                 width: window.outerWidth,
                 height: window.outerHeight,
-                multiplier: canvas.getZoom() * 2,
-                left: viewport.tl.x,
-                top: viewport.tl.y
+                multiplier: 1
             }).replace('image/png', 'image/octet-stream');
 
             let waitCapture = setInterval(() => {
@@ -231,6 +261,7 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
     /**
      * Handles the mouse down event.
      * @param opt Event properties.
+     * @param lineOffset Current offset for line stack.
      */
     function onMouseDown(opt: fabric.IEvent) {
         if (canvas) {
@@ -254,10 +285,6 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
                             }
 
                             if (previousCursor[0] > -1) {
-                                if (followLine) {
-                                    followLine.set('visible', true);
-                                }
-
                                 canvas.remove(...lines.slice(lineOffset + 1, lines.length));
 
                                 let line = newSketchLine([...previousCursor, ...current]);
@@ -269,6 +296,8 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
                                 setLines(nextLines);
 
                                 canvas.add(line);
+                            } else if (followLine) {
+                                followLine.set('visible', true);
                             }
 
                             setPreviousCursor(current);
@@ -285,7 +314,7 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
     }
 
     // Attaches functions to referance to be called outside of the object.
-    React.useImperativeHandle(ref, () => ({ deleteObj, undo, redo, webcamCapture, flip, lock, copy }));
+    React.useImperativeHandle(ref, () => ({ deleteObj, undo, redo, screenshot, flip, lock, copy, webcamCapture, unlock }));
 
     /**
      * Updates object tools styles to theme color.
@@ -295,6 +324,15 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
         fabric.Object.prototype.borderColor = fabric.Object.prototype.cornerStrokeColor = fabric.Object.prototype.cornerColor = theme.palette.primary.main;
         fabric.Object.prototype.cornerStyle = 'circle';
     }, [theme]);
+
+    /**
+     * Updates grid state.
+     */
+    React.useEffect(() => {
+        if (grid) {
+            grid.set('visible', props.grid != false);
+        }
+    }, [props.grid, grid]);
 
     /**
      * Updates webcam visibility.
@@ -312,9 +350,9 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
      */
     React.useEffect(() => {
         if (followLine) {
-            followLine.set({ 
-                stroke: props.penColor ? props.penColor : theme.palette.primary.main, 
-                strokeWidth: props.penWidth ? props.penWidth : 5 
+            followLine.set({
+                stroke: props.penColor ? props.penColor : theme.palette.primary.main,
+                strokeWidth: props.penWidth ? props.penWidth : 5
             });
         }
     }, [props.penColor, props.penWidth]);
@@ -332,6 +370,11 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
         });
 
         setCanvas(c);
+
+        fabric.Image.fromURL('./grid.png', img => {
+            setGrid(img);
+            c.setOverlayImage(img, () => { });
+        }, { evented: false, selectable: false, visible: false, left: 0, top: 0 });
 
         let followLine = newSketchLine();
 
@@ -361,10 +404,8 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
                         webcam.height = webcam.videoHeight;
 
                         let webcamVideo = new fabric.Image(webcam, {
-                            left: window.innerWidth / 2,
-                            top: window.innerHeight / 2,
-                            originX: 'center',
-                            originY: 'center',
+                            left: 0,
+                            top: 0,
                             selectable: false,
                             evented: false
                         });
@@ -377,7 +418,7 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
 
                         webcam.play();
                     }
-                });
+                }).catch(() => { });
         }
     }, [canvas]);
 
@@ -445,10 +486,11 @@ const Canvas = React.forwardRef((props: CanvasProps, ref: React.Ref<CanvasRef>) 
                     />
 
                     <MouseHandler
+                        lineOffset={lineOffset}
                         followLine={followLine}
                         action={props.action}
                         canvas={canvas}
-                        onMouseDown={onMouseDown}
+                        onMouseDown={(e) => onMouseDown(e)}
                     />
                 </>;
             }

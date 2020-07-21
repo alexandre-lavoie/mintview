@@ -1,0 +1,25 @@
+{
+    "translation": {
+        "Settings": "Configuration",
+        "Toggle Camera": "Inverser Camera",
+        "Screenshot": "Capture D'écran",
+        "Flip": "Retourner",
+        "Lock": "Verrouiller",
+        "Copy": "Copier",
+        "Delete": "Supprimer",
+        "Change Mode": "Changer de Mode",
+        "Undo": "Défaire",
+        "Redo": "Refaire",
+        "Pen Color": "Coleur du Stylo",
+        "Pen Width": "Largeur du Stylo",
+        "Editor": "Editeur",
+        "Language": "Langue",
+        "Download": "Télécharger",
+        "Title": "Titre",
+        "Year": "Année",
+        "Upload": "Transfert",
+        "Grid": "Grille",
+        "Photo": "Photo",
+        "Unlock": "Déverrouiller"
+    }
+}

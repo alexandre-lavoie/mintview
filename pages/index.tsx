@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { Grid, Button } from '@material-ui/core';
 import { useRouter } from 'next/router';
+import { useTranslation } from 'react-i18next';
 
 const Home: React.FC = () => {
-
     const router = useRouter();
+    /** Localization. */
+    const { t } = useTranslation();
 
     return (
         <Grid
@@ -29,7 +31,7 @@ const Home: React.FC = () => {
                     <img src='/logo.svg' width='500px' />
                 </Grid>
                 <Grid item>
-                    <Button variant='contained' color='primary' onClick={() => router.push('/app')}>Open</Button>
+                    <Button variant='contained' color='primary' onClick={() => router.push('/app')}>{t('Editor')}</Button>
                 </Grid>
             </Grid>
         </Grid>
